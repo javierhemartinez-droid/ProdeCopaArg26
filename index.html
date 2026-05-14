@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prode Copa Argentina 2026 - Villa Elisa</title>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #10b981; --text: #f1f5f9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        .container { max-width: 950px; margin: auto; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #334155; }
+        h1, h2 { text-align: center; color: var(--accent); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { padding: 10px; border-bottom: 1px solid #334155; text-align: center; }
+        input { background: #0f172a; border: 1px solid #475569; color: white; padding: 8px; border-radius: 6px; text-align: center; width: 90%; }
+        .btn { display: block; width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        .btn-calc { background: var(--accent); color: #064e3b; }
+        .btn-ws { background: #25d366; color: white; }
+        .pts-badge { background: #064e3b; color: #10b981; padding: 5px 10px; border-radius: 15px; font-weight: bold; }
+        .deuda-input { color: #f87171; font-weight: bold; width: 80px; }
+        .fase-tag { font-size: 10px; background: #334155; padding: 2px 6px; border-radius: 4px; color: #cbd5e1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 PRODE COPA ARGENTINA</h1>
+        
+        <div class="card">
+            <h2>📅 Fixture (Goles Reales)</h2>
+            <table id="tabla-partidos">
+                <tbody id="body-partidos">
+                    <tr><td><span class="fase-tag">16AVOS</span> San Lorenzo - Riestra</td><td><input type="number" class="g-l" value="0"></td><td>-</td><td><input type="number" class="g-v" value="0"></td></tr>
+                    <tr><td><span class="fase-tag">16AVOS</span> Talleres - Atl. Tucumán</td><td><input type="number" class="g-l" value="0"></td><td>-</td><td><input type="number" class="g-v" value="0"></td></tr>
+                    <tr><td><span class="fase-tag">16AVOS</span> Banfield - S. Martín (T)</td><td><input type="number" class="g-l" value="0"></td><td>-</td><td><input type="number" class="g-v" value="0"></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>📊 Tabla General</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Campeón Actual</th>
+                        <th>Pronósticos (Goles)</th>
+                        <th>Pts</th>
+                        <th>Deuda ($)</th>
+                    </tr>
+                </thead>
+                <tbody id="body-usuarios">
+                    <tr>
+                        <td><input type="text" value="Javier"></td>
+                        <td><input type="text" value="River Plate"></td>
+                        <td><input type="text" placeholder="Ej: 1-0, 2-1..."></td>
+                        <td><span class="pts-badge">0</span></td>
+                        <td><input type="number" class="deuda-input" value="2000"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn" style="background: #334155; color: white;" onclick="agregarAmigo()">+ Agregar Amigo</button>
+        </div>
+
+        <button class="btn btn-calc" onclick="calcular()">⚡ ACTUALIZAR PUNTOS</button>
+        <button class="btn btn-ws" onclick="compartir()">📲 MANDAR RANKING A WHATSAPP</button>
+
+        <div class="card" style="font-size: 13px; color: #94a3b8;">
+            <h3>🔄 Cambio de Campeón:</h3>
+            <p>Si tu equipo queda eliminado, podés elegir un nuevo candidato. 
+            <strong>Costo del cambio: $500</strong> (se suma a tu deuda actual).</p>
+            <p><em>Ejemplo: Si debías $2000 y cambiás de equipo, el administrador te anotará $2500.</em></p>
+        </div>
+    </div>
+
+    <script>
+        function agregarAmigo() {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" placeholder="Nombre"></td>
+                <td><input type="text" placeholder="Equipo"></td>
+                <td><input type="text" placeholder="X-X, X-X..."></td>
+                <td><span class="pts-badge">0</span></td>
+                <td><input type="number" class="deuda-input" value="2000"></td>`;
+            document.getElementById('body-usuarios').appendChild(tr);
+        }
+
+        function calcular() {
+            const partidos = Array.from(document.querySelectorAll('#body-partidos tr')).map(f => ({
+                l: parseInt(f.querySelector('.g-l').value) || 0,
+                v: parseInt(f.querySelector('.g-v').value) || 0
+            }));
+
+            document.querySelectorAll('#body-usuarios tr').forEach(fila => {
+                const inputs = fila.querySelectorAll('input');
+                const pInput = inputs[2].value;
+                if(!pInput) return;
+                const pronos = pInput.split(',').map(s => s.trim());
+                let total = 0;
+
+                pronos.forEach((prono, i) => {
+                    if(!prono.includes('-') || !partidos[i]) return;
+                    const [uL, uV] = prono.split('-').map(Number);
+                    const rL = partidos[i].l;
+                    const rV = partidos[i].v;
+
+                    if(uL === rL && uV === rV) total += 3;
+                    else if(Math.sign(uL - uV) === Math.sign(rL - rV)) total += 1;
+                });
+                fila.querySelector('.pts-badge').innerText = total;
+            });
+        }
+
+        function compartir() {
+            let txt = "🏆 *PRODE COPA ARGENTINA 2026*\n\n";
+            document.querySelectorAll('#body-usuarios tr').forEach(f => {
+                const inputs = f.querySelectorAll('input');
+                const nom = inputs[0].value || "Amigo";
+                const camp = inputs[1].value || "-";
+                const pts = f.querySelector('.pts-badge').innerText;
+                const deu = inputs[3].value;
+                txt += `• *${nom}* (${camp}): ${pts} pts | Debe: $${deu}\n`;
+            });
+            window.open("https://wa.me/?text=" + encodeURIComponent(txt));
+        }
+    </script>
+</body>
+</html>
+
