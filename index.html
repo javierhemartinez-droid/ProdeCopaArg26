@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prode Copa Argentina 2026 - Villa Elisa</title>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --accent: #10b981; --text: #f1f5f9; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; }
+        .container { max-width: 950px; margin: auto; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #334155; }
+        
+        /* ESTILO DEL POZO */
+        .pozo-container { display: flex; gap: 15px; margin-bottom: 20px; }
+        .pozo-card { flex: 1; background: linear-gradient(135deg, #064e3b 0%, #1e293b 100%); padding: 15px; border-radius: 12px; border: 1px solid var(--accent); text-align: center; }
+        .pozo-monto { font-size: 24px; font-weight: bold; color: var(--accent); display: block; }
+        .pozo-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #cbd5e1; }
+
+        h1, h2 { text-align: center; color: var(--accent); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { padding: 10px; border-bottom: 1px solid #334155; text-align: center; }
+        input { background: #0f172a; border: 1px solid #475569; color: white; padding: 8px; border-radius: 6px; text-align: center; width: 90%; }
+        .btn { display: block; width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        .btn-calc { background: var(--accent); color: #064e3b; }
+        .btn-ws { background: #25d366; color: white; }
+        .pts-badge { background: #064e3b; color: #10b981; padding: 5px 10px; border-radius: 15px; font-weight: bold; }
+        .deuda-input { color: #f87171; font-weight: bold; width: 85px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 PRODE VILLA ELISA 2026</h1>
+
+        <div class="pozo-container">
+            <div class="pozo-card">
+                <span class="pozo-label">Pozo Total Estimado</span>
+                <span class="pozo-monto" id="pozo-total">$0</span>
+            </div>
+            <div class="pozo-card">
+                <span class="pozo-label">Pozo del Campeón (10%)</span>
+                <span class="pozo-monto" id="pozo-campeon">$0</span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📅 Fixture 16avos</h2>
+            <table id="tabla-partidos">
+                <tbody id="body-partidos">
+                    <tr><td>San Lorenzo - Riestra</td><td><input type="number" class="g-l" value="0" onchange="calcular()"> - <input type="number" class="g-v" value="0" onchange="calcular()"></td></tr>
+                    <tr><td>Talleres - Atl. Tucumán</td><td><input type="number" class="g-l" value="0" onchange="calcular()"> - <input type="number" class="g-v" value="0" onchange="calcular()"></td></tr>
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>📊 Ranking y Apuestas</h2>
+            <table>
+                <thead>
+                    <tr><th>Participante</th><th>Campeón</th><th>Pronósticos</th><th>Pts</th><th>Deuda ($)</th></tr>
+                </thead>
+                <tbody id="body-usuarios">
+                    <tr>
+                        <td><input type="text" value="Javier" onchange="actualizarPozo()"></td>
+                        <td><input type="text" placeholder="Equipo"></td>
+                        <td><input type="text" placeholder="Goles" onchange="calcular()"></td>
+                        <td><span class="pts-badge">0</span></td>
+                        <td><input type="number" class="deuda-input" value="2000" onchange="actualizarPozo()"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn" style="background: #334155; color: white;" onclick="agregarAmigo()">+ Agregar Amigo</button>
+        </div>
+
+        <button class="btn btn-calc" onclick="calcular()">⚡ ACTUALIZAR PUNTOS Y POZO</button>
+        <button class="btn btn-ws" onclick="compartir()">📲 COMPARTIR RANKING</button>
+    </div>
+
+    <script>
+        function agregarAmigo() {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" placeholder="Nombre" onchange="actualizarPozo()"></td>
+                <td><input type="text" placeholder="Campeón"></td>
+                <td><input type="text" placeholder="Prodes" onchange="calcular()"></td>
+                <td><span class="pts-badge">0</span></td>
+                <td><input type="number" class="deuda-input" value="2000" onchange="actualizarPozo()"></td>`;
+            document.getElementById('body-usuarios').appendChild(tr);
+            actualizarPozo();
+        }
+
+        function actualizarPozo() {
+            const deudas = Array.from(document.querySelectorAll('.deuda-input'));
+            let total = 0;
+            deudas.forEach(d => {
+                total += parseInt(d.value) || 0;
+            });
+            document.getElementById('pozo-total').innerText = '$' + total;
+            document.getElementById('pozo-campeon').innerText = '$' + (total * 0.10).toFixed(0);
+        }
+
+        function calcular() {
+            // Lógica de puntos igual que antes
+            const partidos = Array.from(document.querySelectorAll('#body-partidos tr')).map(f => ({
+                l: parseInt(f.querySelectorAll('input')[0].value) || 0,
+                v: parseInt(f.querySelectorAll('input')[1].value) || 0
+            }));
+
+            document.querySelectorAll('#body-usuarios tr').forEach(fila => {
+                const inputs = fila.querySelectorAll('input');
+                const pInput = inputs[2].value;
+                if(!pInput) return;
+                const pronos = pInput.split(',').map(s => s.trim());
+                let total = 0;
+
+                pronos.forEach((prono, i) => {
+                    if(!prono.includes('-') || !partidos[i]) return;
+                    const [uL, uV] = prono.split('-').map(Number);
+                    const rL = partidos[i].l;
+                    const rV = partidos[i].v;
+                    if(uL === rL && uV === rV) total += 3;
+                    else if(Math.sign(uL - uV) === Math.sign(rL - rV)) total += 1;
+                });
+                fila.querySelector('.pts-badge').innerText = total;
+            });
+            actualizarPozo();
+        }
+
+        function compartir() {
+            const pozo = document.getElementById('pozo-total').innerText;
+            let txt = `🏆 *PRODE VILLA ELISA 2026*\n💰 *POZO TOTAL: ${pozo}*\n\n`;
+            document.querySelectorAll('#body-usuarios tr').forEach(f => {
+                const inputs = f.querySelectorAll('input');
+                const nom = inputs[0].value || "---";
+                const pts = f.querySelector('.pts-badge').innerText;
+                txt += `• *${nom}*: ${pts} pts\n`;
+            });
+            window.open("https://wa.me/?text=" + encodeURIComponent(txt));
+        }
+        
+        // Inicializar pozo al cargar
+        actualizarPozo();
+    </script>
+</body>
+</html>
+
