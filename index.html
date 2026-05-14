@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prode Copa Argentina 2026 - Villa Elisa</title>
+  <style>
+    body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #121212; color: #eee; padding: 20px; }
+    .container { max-width: 1100px; margin: auto; }
+    .card { background: #1e1e1e; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333; }
+    h1, h2 { text-align: center; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #1a1a1a; }
+    th, td { border: 1px solid #333; padding: 12px; text-align: center; }
+    th { background: #282828; color: #aaa; font-size: 0.85em; text-transform: uppercase; }
+    input { background: #111; color: #fff; border: 1px solid #444; padding: 8px; border-radius: 4px; text-align: center; width: 85%; }
+    .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    .btn-add { background: #007bff; color: white; margin-top: 10px; }
+    .btn-calc { background: #ffffff; color: #111; width: 100%; margin-top: 20px; font-size: 1.1em; box-shadow: 0 4px 10px rgba(255,255,255,0.1); }
+    .btn-ws { background: #25D366; color: white; width: 100%; margin-top: 10px; }
+    .puntos { font-weight: bold; color: #00ff88; font-size: 1.3em; }
+    .delete-btn { background: #ff4444; color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em; }
+    .instrucciones { font-size: 0.9em; color: #bbb; margin-bottom: 15px; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚽ PRODE COPA ARGENTINA 2026</h1>
+    
+    <div class="card">
+      <h2>1. Próximos Partidos (16avos)</h2>
+      <p class="instrucciones">Cargá aquí los resultados reales a medida que terminen los partidos.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Local</th>
+            <th>Visitante</th>
+            <th>Goles L</th>
+            <th>Goles V</th>
+            <th>Eliminar</th>
+          </tr>
+        </thead>
+        <tbody id="bodyPartidos"></tbody>
+      </table>
+      <button class="btn btn-add" onclick="agregarPartido()">+ Agregar Otro Partido</button>
+    </div>
+
+    <div class="card">
+      <h2>2. Tabla de Participantes</h2>
+      <p class="instrucciones">
+        <b>Importante:</b> En "Pronósticos", poné los resultados separados por comas siguiendo el orden de la tabla de arriba.<br>
+        <i>Ejemplo: 2-1, 1-1, 0-2 (Siendo 2-1 el primer partido, 1-1 el segundo, etc.)</i>
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Amigo</th>
+            <th>Pronósticos (Ej: 1-0, 2-2...)</th>
+            <th>Puntos</th>
+            <th>Borrar</th>
+          </tr>
+        </thead>
+        <tbody id="bodyPronosticos"></tbody>
+      </table>
+      <button class="btn btn-add" onclick="agregarParticipante()">+ Agregar Participante</button>
+    </div>
+
+    <button class="btn btn-calc" onclick="calcularTodo()">CALCULAR POSICIONES</button>
+    <button class="btn btn-ws" onclick="compartirWhatsApp()">ENVIAR RANKING A WHATSAPP 📱</button>
+  </div>
+
+  <script>
+    // Partidos cargados según el fixture real de Mayo 2026
+    const partidosIniciales = [
+      {l: 'Talleres (C)', v: 'Atl. Tucumán', gl: 0, gv: 0},
+      {l: 'Unión (SF)', v: 'Independiente', gl: 0, gv: 0},
+      {l: 'River Plate', v: 'Aldosivi', gl: 0, gv: 0},
+      {l: 'Boca Juniors', v: 'Sarmiento (J)', gl: 0, gv: 0},
+      {l: 'Racing Club', v: 'Defensa y J.', gl: 0, gv: 0}
+    ];
+
+    let partidos = JSON.parse(localStorage.getItem('partidos_ca')) || partidosIniciales;
+    let participantes = JSON.parse(localStorage.getItem('participantes_ca')) || [
+      {nombre: 'Javi', prodes: '', pts: 0},
+      {nombre: 'Nico', prodes: '', pts: 0},
+      {nombre: 'Fede', prodes: '', pts: 0}
+    ];
+
+    function render() {
+      const bodyPartidos = document.getElementById('bodyPartidos');
+      bodyPartidos.innerHTML = '';
+      partidos.forEach((p, i) => {
+        bodyPartidos.innerHTML += `
+          <tr>
+            <td><input value="${p.l}" onchange="update('p', ${i}, 'l', this.value)"></td>
+            <td><input value="${p.v}" onchange="update('p', ${i}, 'v', this.value)"></td>
+            <td><input type="number" value="${p.gl}" onchange="update('p', ${i}, 'gl', this.value)"></td>
+            <td><input type="number" value="${p.gv}" onchange="update('p', ${i}, 'gv', this.value)"></td>
+            <td><span class="delete-btn" onclick="eliminar('p', ${i})">X</span></td>
+          </tr>`;
+      });
+
+      const bodyPronos = document.getElementById('bodyPronosticos');
+      bodyPronos.innerHTML = '';
+      participantes.forEach((p, i) => {
+        bodyPronos.innerHTML += `
+          <tr>
+            <td><input value="${p.nombre}" onchange="update('u', ${i}, 'nombre', this.value)"></td>
+            <td><input value="${p.prodes}" onchange="update('u', ${i}, 'prodes', this.value)"></td>
+            <td class="puntos">${p.pts}</td>
+            <td><span class="delete-btn" onclick="eliminar('u', ${i})">X</span></td>
+          </tr>`;
+      });
+      save();
+    }
+
+    function update(type, i, field, val) {
+      if(type === 'p') partidos[i][field] = val;
+      else participantes[i][field] = val;
+      save();
+    }
+
+    function agregarPartido() { partidos.push({l: '', v: '', gl: 0, gv: 0}); render(); }
+    function agregarParticipante() { participantes.push({nombre: '', prodes: '', pts: 0}); render(); }
+    function eliminar(type, i) {
+      if(type === 'p') partidos.splice(i, 1);
+      else participantes.splice(i, 1);
+      render();
+    }
+
+    function save() {
+      localStorage.setItem('partidos_ca', JSON.stringify(partidos));
+      localStorage.setItem('participantes_ca', JSON.stringify(participantes));
+    }
+
+    function calcularTodo() {
+      participantes.forEach(user => {
+        let total = 0;
+        const pList = user.prodes.split(',').map(s => s.trim());
+        
+        partidos.forEach((partido, i) => {
+          if (!pList[i] || !pList[i].includes('-')) return;
+          const [uL, uV] = pList[i].split('-').map(Number);
+          const rL = parseInt(partido.gl);
+          const rV = parseInt(partido.gv);
+
+          if (uL === rL && uV === rV) total += 3;
+          else if (Math.sign(uL - uV) === Math.sign(rL - rV)) total += 1;
+        });
+        user.pts = total;
+      });
+      participantes.sort((a,b) => b.pts - a.pts);
+      render();
+    }
+
+    function compartirWhatsApp() {
+      let msg = "🏆 *PRODE COPA ARGENTINA 2026* 🏆\n\n";
+      participantes.forEach((p, i) => {
+        const medal = i === 0 ? "🥇" : (i === 1 ? "🥈" : "🥉");
+        msg += `${medal} *${p.nombre}*: ${p.pts} pts\n`;
+      });
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    render();
+  </script>
+</body>
+</html>
